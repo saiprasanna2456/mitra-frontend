@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Mitra</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<style>
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  height: 100vh;
+  display: flex;
+  background: #f4f6f3;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 280px;
+  background: #e9f5ec;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.app-name {
+  font-size: 20px;
+  font-weight: 600;
+  color: #2f7d32;
+}
+
+.app-sub {
+  font-size: 13px;
+  color: #4a7c50;
+  margin-top: 4px;
+}
+
+.info {
+  margin-top: 30px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #333;
+}
+
+/* MAIN */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* TOP BAR */
+.topbar {
+  padding: 14px 18px;
+  background: white;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.title {
+  font-weight: 500;
+}
+
+/* LANGUAGE BUTTONS */
+.lang button {
+  border: none;
+  background: #2f7d32;
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 16px;
+  margin-left: 8px;
+  cursor: pointer;
+}
+
+/* CHAT */
+.chat {
+  flex: 1;
+  padding: 22px;
+  overflow-y: auto;
+}
+
+.msg {
+  max-width: 70%;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.user {
+  background: #d9f2dc;
+  margin-left: auto;
+}
+
+.bot {
+  background: white;
+}
+
+/* INPUT */
+.input {
+  padding: 14px;
+  display: flex;
+  gap: 10px;
+  border-top: 1px solid #ddd;
+  background: white;
+}
+
+input {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 22px;
+  border: 1px solid #ccc;
+  outline: none;
+}
+
+.send {
+  background: #2f7d32;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 46px;
+  height: 46px;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="app-name" id="appName"></div>
+  <div class="app-sub" id="appSub"></div>
+
+  <div class="info" id="sidebarInfo"></div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <div class="topbar">
+    <div class="title" id="topTitle"></div>
+    <div class="lang">
+      <button onclick="setLang('ta')">த</button>
+      <button onclick="setLang('ml')">മ</button>
+      <button onclick="setLang('en')">EN</button>
+    </div>
+  </div>
+
+  <div class="chat" id="chat"></div>
+
+  <div class="input">
+    <input id="prompt" />
+    <button class="send" onclick="send()">➤</button>
+  </div>
+
+</div>
+
+<script>
+let currentLang = "en";
+
+/* 🔤 FULL TRANSLATION DICTIONARY */
+const TEXT = {
+  en: {
+    appName: "🌾 Mitra",
+    welcomeMessage: "Welcome to Karshak Mitra! Ask me anything about farming, crops, soil, pests, irrigation, and weather. How can I assist you today?",
+    appSub: "Your Farming Guide",
+    sidebarInfo: "Ask doubts about crops, soil, pests, irrigation, and weather.\n\nAlways confirm important decisions with a local agriculture officer.",
+    topTitle: "Chat with your farming assistant",
+    placeholder: "Ask about crops, weather, pest control…",
+    typing: "Thinking…"
+  },
+  ta: {
+    appName: "🌾 மித்ரா",
+    welcomeMessage: "வணக்கம்! உங்கள் விவசாய சந்தேகங்களை கேளுங்கள்.",
+    appSub: "உங்கள் விவசாய வழிகாட்டி",
+    sidebarInfo: "பயிர்கள், மண், பூச்சிகள், நீர்ப்பாசனம், வானிலை பற்றிய சந்தேகங்களை கேளுங்கள்.\n\nமுக்கிய முடிவுகளுக்கு உள்ளூர் வேளாண் அலுவலரை அணுகுங்கள்.",
+    topTitle: "உங்கள் விவசாய உதவியாளருடன் உரையாடல்",
+    placeholder: "பயிர்கள், வானிலை குறித்து கேளுங்கள்…",
+    typing: "பதிலளிக்கிறது…"
+  },
+  ml: {
+    appName: "🌾 മിത്ര",
+    welcomeMessage: "നമസ്കാരം! നിങ്ങളുടെ കൃഷി സംശയങ്ങൾ ചോദിക്കൂ.",
+    appSub: "നിങ്ങളുടെ കൃഷി മാർഗദർശകൻ",
+    sidebarInfo: "വിളകൾ, മണ്ണ്, കീടങ്ങൾ, ജലസേചനം, കാലാവസ്ഥ എന്നിവയെക്കുറിച്ച് ചോദിക്കാം.\n\nപ്രധാന തീരുമാനങ്ങൾക്ക് കൃഷി ഓഫീസറെ സമീപിക്കുക.",
+    topTitle: "നിങ്ങളുടെ കൃഷി സഹായിയുമായി ചാറ്റ് ചെയ്യൂ",
+    placeholder: "കൃഷി ചോദ്യം ഇവിടെ എഴുതുക…",
+    typing: "മറുപടി തയ്യാറാക്കുന്നു…"
+  }
+};
+
+/* 🌍 APPLY LANGUAGE TO WHOLE PAGE */
+function setLang(lang) {
+  currentLang = lang;
+  const t = TEXT[lang];
+
+  // translate UI
+  document.getElementById("appName").innerText = t.appName;
+  document.getElementById("appSub").innerText = t.appSub;
+  document.getElementById("sidebarInfo").innerText = t.sidebarInfo;
+  document.getElementById("topTitle").innerText = t.topTitle;
+  document.getElementById("prompt").placeholder = t.placeholder;
+
+  // 🔥 CLEAR CHAT (IMPORTANT)
+  const chat = document.getElementById("chat");
+  chat.innerHTML = "";
+
+  // 🔥 ADD WELCOME MESSAGE IN SELECTED LANGUAGE
+  const welcome = document.createElement("div");
+  welcome.className = "msg bot";
+  welcome.innerText = t.welcomeMessage;
+  chat.appendChild(welcome);
+}
+
+
+/* 💬 SEND MESSAGE */
+async function send() {
+  const chat = document.getElementById("chat");
+  const input = document.getElementById("prompt");
+  const text = input.value.trim();
+  if (!text) return;
+
+  const userMsg = document.createElement("div");
+  userMsg.className = "msg user";
+  userMsg.innerText = text;
+  chat.appendChild(userMsg);
+
+  input.value = "";
+  chat.scrollTop = chat.scrollHeight;
+
+  const botMsg = document.createElement("div");
+  botMsg.className = "msg bot";
+  botMsg.innerText = TEXT[currentLang].typing;
+  chat.appendChild(botMsg);
+  chat.scrollTop = chat.scrollHeight;
+
+  try {
+    const res = await fetch(
+      `http://127.0.0.1:8000/chat?prompt=${encodeURIComponent(text)}&lang=${currentLang}`,
+      { method: "POST" }
+    );
+    const data = await res.json();
+    botMsg.innerText = data.response;
+  } catch {
+    botMsg.innerText = "Server not responding.";
+  }
+}
+
+/* INIT */
+setLang("en");
+</script>
+
+</body>
+</html>
